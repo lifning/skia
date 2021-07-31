@@ -12,6 +12,7 @@ import stat
 import sys
 import tempfile
 import zipfile
+from distutils.spawn import find_executable
 
 if sys.version_info[0] < 3:
   from urllib2 import urlopen
@@ -20,29 +21,33 @@ else:
 
 os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
 
-gnzip = os.path.join(tempfile.mkdtemp(), 'gn.zip')
-with open(gnzip, 'wb') as f:
-  OS  = {'darwin': 'mac', 'linux': 'linux', 'linux2': 'linux', 'win32': 'windows', 'msys': 'windows'}[sys.platform]
-  cpu = {'amd64': 'amd64', 'arm64': 'arm64', 'x86_64': 'amd64', 'aarch64': 'arm64'}[platform.machine().lower()]
+gn = find_executable('gn')
+if gn is None:
+  gnzip = os.path.join(tempfile.mkdtemp(), 'gn.zip')
+  with open(gnzip, 'wb') as f:
+    OS  = {'darwin': 'mac', 'linux': 'linux', 'linux2': 'linux', 'win32': 'windows', 'msys': 'windows'}[sys.platform]
+    cpu = {'amd64': 'amd64', 'arm64': 'arm64', 'x86_64': 'amd64', 'aarch64': 'arm64'}[platform.machine().lower()]
 
-  rev = 'd62642c920e6a0d1756316d225a90fd6faa9e21e'
-  url = 'https://chrome-infra-packages.appspot.com/dl/gn/gn/{}-{}/+/git_revision:{}'.format(
-          OS,cpu,rev)
-  f.write(urlopen(url).read())
+    rev = 'd62642c920e6a0d1756316d225a90fd6faa9e21e'
+    url = 'https://chrome-infra-packages.appspot.com/dl/gn/gn/{}-{}/+/git_revision:{}'.format(
+              OS,cpu,rev)
+    f.write(urlopen(url).read())
 
-gn = 'gn.exe' if 'win32' in sys.platform or 'msys' in sys.platform else 'gn'
-with zipfile.ZipFile(gnzip, 'r') as f:
-  f.extract(gn, 'bin')
+  gn = 'gn.exe' if 'win32' in sys.platform or 'msys' in sys.platform else 'gn'
+  with zipfile.ZipFile(gnzip, 'r') as f:
+    f.extract(gn, 'bin')
 
-gn = os.path.join('bin', gn)
+  gn = os.path.join('bin', gn)
 
-os.chmod(gn, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
-             stat.S_IRGRP                | stat.S_IXGRP |
-             stat.S_IROTH                | stat.S_IXOTH )
+  os.chmod(gn, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
+               stat.S_IRGRP                | stat.S_IXGRP |
+               stat.S_IROTH                | stat.S_IXOTH )
 
 # We'll also copy to a path that depot_tools' GN wrapper will expect to find the binary.
 copy_path = 'buildtools/linux64/gn' if 'linux'  in sys.platform else \
             'buildtools/mac/gn'     if 'darwin' in sys.platform else \
             'buildtools/win/gn.exe'
-if os.path.isdir(os.path.dirname(copy_path)):
-  shutil.copy(gn, copy_path)
+if not os.path.isdir(os.path.dirname(copy_path)):
+  os.makedirs(os.path.dirname(copy_path))
+
+shutil.copy(gn, copy_path)
