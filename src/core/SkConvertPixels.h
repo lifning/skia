@@ -12,7 +12,7 @@
 #include "include/private/SkTemplates.h"
 
 class SkColorTable;
-
+__attribute__ ((visibility ("default")))
 bool SK_WARN_UNUSED_RESULT SkConvertPixels(
         const SkImageInfo& dstInfo,       void* dstPixels, size_t dstRowBytes,
         const SkImageInfo& srcInfo, const void* srcPixels, size_t srcRowBytes);

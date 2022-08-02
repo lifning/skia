@@ -228,6 +228,7 @@ static bool nearly_equal(const skcms_Matrix3x3& u, const skcms_Matrix3x3& v) {
 }
 
 // Return nullptr if the color profile doen't have a special name.
+__attribute__ ((visibility ("default")))
 const char* get_color_profile_description(const skcms_TransferFunction& fn,
                                           const skcms_Matrix3x3& toXYZD50) {
     bool srgb_xfer = nearly_equal(fn, SkNamedTransferFn::kSRGB);
